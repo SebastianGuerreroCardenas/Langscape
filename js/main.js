@@ -119,7 +119,6 @@ $(document).ready(function(error) {
     		langaugePicked: null,
     		languagesAdded: [],
     		polygons: [1,2,3],
-    		message: 'Hello Vue!',
     		selected: '',
     		allData: {},
     	},
@@ -128,8 +127,7 @@ $(document).ready(function(error) {
     			let s = this.selected;
     			if (s != '' && this.languagesAdded.indexOf(s) < 0) {
     				this.languagesAdded.push(s);
-    				Vue.set(vm.allData, s, [])
-    				// this.allData[s] = [];
+    				Vue.set(vm.allData, s, []);
     				this.langaugePicked = s;
     			}
     		},

@@ -43,7 +43,7 @@
 
 
           <!-- <language-card v-for="l in languagesAdded" v-bind:lan="l" v-bind:key="l" ></language-card> -->
-          <better-card v-on:select-language="selectLanguage"v-for="(l, k) in allData" v-bind:lan="k" v-bind:slan='langaugePicked' v-bind:shapes="l" v-bind:key="k" ></better-card>
+          <better-card v-on:select-langauge="selectLanguage" v-for="(l, k) in allData" v-bind:lan="k" v-bind:slan='langaugePicked' v-bind:shapes="l" v-bind:key="k" ></better-card>
 
           <button data-target="modal1" class="btn modal-trigger">Add Langauge</button><br><br>
           <button  class="btn red">SUBMIT</button>
