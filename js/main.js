@@ -23,46 +23,6 @@ $(document).ready(function(error) {
 				   </div>`
 	});
 
-	Vue.component('language-card', {
-    	props: ['lan'],
-		template: `  <div class="row">
-					    <div class="col s12">
-					      <div class="card blue darken-1" v-on:click="">
-					        <div class="card-content white-text">
-					          <span class="card-title">{{lan}}</span>
-
-					         <p>Contributions</p>
-
-					          
-					          <ul class="collection">
-					          	<li class="collection-item avatar">
-					          		<a href="#!" v-on:click="p.moveTo">
-						          		<i class="material-icons circle">adjust</i>
-						          		<span class="title">Circle # 1</span>
-						          		<p>Contexts not completed</p>
-					          		</a>
-								    <a href="#!" class="secondary-content" v-on:click="p.delete()"><i class="material-icons">delete</i></a>
-					          	</li>
-						        
-					          </ul>
-					        
-
-
-					        </div>
-					        <div class="card-action">
-					          
-					        </div>
-					      </div>
-					    </div>
-					  </div>
-           `,
-        methods: {
-        	langPicked(lan) {
-        		this.$emit('')
-        	}
-        }
-	});
-
 
 
 	Vue.component('better-card', {
@@ -71,8 +31,7 @@ $(document).ready(function(error) {
 					    <div class="col s12">
 					      <div class="card blue" v-bind:class="{'darken-4': lan == slan}">
 					        <div class="card-content white-text">
-					          <span class="card-title">{{lan}}<a class="waves-effect waves-light btn" v-on:click="$emit('select-langauge', lan)">Select</a></span>
-					          	{{slan}}
+					          <span class="card-title">{{lan}}<a v-if="lan != slan" class="waves-effect waves-light orange darken-1 btn" v-on:click="$emit('select-langauge', lan)">Select</a></span>
 					         <p>Contributions</p>
 		
 					          
@@ -83,7 +42,7 @@ $(document).ready(function(error) {
 						          		<span class="title">{{p.type}}</span>
 						          		<p>Contexts not completed</p>
 					          		</a>
-								    <a href="#!" class="secondary-content" v-on:click="p.erase()"><i class="material-icons">delete</i></a>
+								    <a href="#!" class="secondary-content" v-on:click="p.deleteShape()"><i class="material-icons">delete</i></a>
 					          	</li>
 						        
 					          </ul>
@@ -95,12 +54,7 @@ $(document).ready(function(error) {
 					      </div>
 					    </div>
 					  </div>
-           `,
-        methods: {
-        	langPicked(lan) {
-        		this.$emit('')
-        	}
-        }
+           `
 	});
 
     Vue.component('language-marker', {
@@ -118,7 +72,6 @@ $(document).ready(function(error) {
     		languages: LangaugeData,
     		langaugePicked: null,
     		languagesAdded: [],
-    		polygons: [1,2,3],
     		selected: '',
     		allData: {},
     	},
@@ -128,28 +81,40 @@ $(document).ready(function(error) {
     			if (s != '' && this.languagesAdded.indexOf(s) < 0) {
     				this.languagesAdded.push(s);
     				Vue.set(vm.allData, s, []);
-    				this.langaugePicked = s;
+    				this.selectLanguage(s);
     			}
     		},
     		selectLanguage: function(l) {
-    			console.log('this is working ')
-    			this.langaugePicked = l;
-    		},
-    		addPolygon: function(polygon) {
-    			this.polygons.push(polygon);
-    		},
-    		addShapes() {
-    			console.log(this.allData);
-    		},
-    		deletePolygon: function() {
-    			console.log('delete');
+					let lastSelect = this.langaugePicked;
+					this.langaugePicked = l;
+					this.drawLang(lastSelect, l);
     		},
     		selectPolygon: function(move) {
     			move(26.2034,-98.2300);
-    		}
+				},
+				drawLang: function(lastSelect, newSelect) {
+					this.allData[lastSelect].forEach( function(s) {
+						s.erase();
+					});
+					this.allData[newSelect].forEach( function(s) {
+						s.draw();
+					});
+
+				}
     	},
 		el: '#langscapeApp',
 	});
+
+
+function makeid() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for (var i = 0; i < 5; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
+}
 
 
 
@@ -178,7 +143,7 @@ function initMap() {
           markerOptions: {icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png'},
           circleOptions: {
             fillColor: '#ffff00',
-            fillOpacity: 1,
+            fillOpacity: .3,
             strokeWeight: 5,
             clickable: true,
             editable: true,
@@ -208,18 +173,20 @@ function initMap() {
 		  	let count = vm.allData[vm.langaugePicked].length + 1;
 		  	let lattitude = event.overlay.getCenter().lat();
 		  	let longitude = event.overlay.getCenter().lng();
-		  	let r = event.overlay.getRadius()
+				let r = event.overlay.getRadius();
+				let newId = makeid();
 		  	let c = {
+					id: newId,
 		  		lat: lattitude,
 		  		lng: longitude,
 		  		radius: r,
-		  		id: count,
-		  		type: 'circle',
+					type: 'circle',
+					shape: event.overlay,
 		  		visible: true,
 		  		draw: function() {
 		  			var circle = new google.maps.Circle({
 		  				fillColor: '#ffff00',
-			            fillOpacity: 1,
+			            fillOpacity: .3,
 			            strokeWeight: 5,
 			            map: map,
 			            center: {lat: lattitude, lng: longitude},
@@ -227,32 +194,71 @@ function initMap() {
 			            clickable: true,
            				editable: true,
 
-		  			});
+						});
+							this.shape = circle;				
 		  		},
-		  		erase: function() {
-		  			event.overlay.setMap(null);
-		  		},
+		  		deleteShape: function() {
+						for (var i = 0; i< vm.allData[vm.langaugePicked].length; i++) {
+							if (this.id === vm.allData[vm.langaugePicked][i].id) {
+								vm.allData[vm.langaugePicked].splice(i,1);
+								this.shape.setMap(null);
+							}
+						}
+					},
+					erase: function() {
+						this.shape.setMap(null);
+					},
 		  		moveTo: function() {
-		  			moveToLocation(event.overlay.getCenter().lat(),event.overlay.getCenter().lng())
+		  			moveToLocation(this.shape.getCenter().lat(), this.shape.getCenter().lng())
 		  		}
 		  	}
-		    // vm.allData[vm.langaugePicked].push(c);
 		    Vue.set(vm.allData[vm.langaugePicked], vm.allData[vm.langaugePicked].length, c);
-		    vm.allData = Object.assign({},vm.allData, {})
-		    vm.addShapes();
+		    // vm.allData = Object.assign({},vm.allData, {})
 		  } else {
-		  	let vertices = event.overlay.getPath();
+		  	let verticesData = event.overlay.getPath();
 		  	// Iterate over the vertices.
-			  for (var i =0; i < vertices.getLength(); i++) {
-			    var xy = vertices.getAt(i);
+			  for (var i =0; i < verticesData.getLength(); i++) {
+			    var xy = verticesData.getAt(i);
 			    console.log('Coordinate ' + i + ':' + xy.lat() + ',' + xy.lng() );
 			  }
+				let newId = makeid();
+				let s = {
+						id: newId,
+						shape: event.overlay,
+						vertices: event.overlay.getPath(),
+						visible: true,
+						type: 'polygon',
+						draw: function() {
+							var polygon = new google.maps.Polygon({
+								fillColor: '#ffff00',
+										fillOpacity: .3,
+										strokeWeight: 5,
+										map: map,
+										paths: this.shape.getPath(),
+										clickable: true,
+										editable: true,
+										draggable:true
+							});
+								this.shape = polygon;				
+						},
+						deleteShape: function() {
+							for (var i = 0; i< vm.allData[vm.langaugePicked].length; i++) {
+								if (this.id === vm.allData[vm.langaugePicked][i].id) {
+									vm.allData[vm.langaugePicked].splice(i,1);
+									this.shape.setMap(null);
+								}
+							}
+						},
+						erase: function() {
+							this.shape.setMap(null);
+						},
+						moveTo: function() {
+							var xy = this.shape.getPath().getAt(0);
+							moveToLocation(xy.lat(), xy.lng());
+						}
 
-
-
-			//add polygon to the right section
-
-
+				}
+				 Vue.set(vm.allData[vm.langaugePicked], vm.allData[vm.langaugePicked].length, s);
 		  }
 		});
 
@@ -330,4 +336,6 @@ function initMap() {
 		    searchBox.setBounds(bounds);
 		  });
         drawingManager.setMap(map);
-      }
+			}
+			
+			
